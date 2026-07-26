@@ -1,0 +1,8 @@
+{
+  "name": " Smart book",
+  "description": " Create a Smart book",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
