@@ -137,7 +137,9 @@ To rebrand Smart Book for your organization:
 | `NODE_ENV` | Yes (prod) | `development` | Set to `production` to serve built `dist/` bundle |
 | `APP_URL` | Yes | `http://localhost:3000` | Public canonical URL of the deployment |
 | `DATABASE_URL` | Yes (DB) | — | PostgreSQL connection string (`postgresql://user:pass@host:5432/db`) |
+| `POSTGRES_PASSWORD` | Yes (Docker) | `smartbook_local_dev` | Password for the `smartbook` PostgreSQL container user |
 | `SESSION_SECRET` | Yes (prod) | Random per boot | HMAC-SHA256 signing key for Bearer session tokens |
 | `ADMIN_EMAIL` | Optional | — | Bootstraps initial admin user email on startup |
 | `ADMIN_INITIAL_PASSWORD` | Optional | — | Bootstraps initial admin user credential on startup |
 | `GEMINI_API_KEY` | Optional | — | Server-side key for optional `@google/genai` integrations |
+| `DISABLE_HMR` | Optional | `false` | Set to `true` to disable Vite HMR file watching in hosted sandboxes |
