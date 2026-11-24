@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Brain, Plus, Trash2, Award, Sparkles, BookOpen, Clock, BarChart } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { formatLocalDate } from '../utils/date';
 
 export default function StudyTrackerComponent() {
   const theme = useStore((state) => state.theme);
@@ -12,14 +13,15 @@ export default function StudyTrackerComponent() {
   const [subject, setSubject] = useState('');
   const [duration, setDuration] = useState('');
   const [focusScore, setFocusScore] = useState(8);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(formatLocalDate());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!subject.trim() || !duration) return;
+    const parsedDuration = parseInt(duration, 10);
+    if (!subject.trim() || Number.isNaN(parsedDuration) || parsedDuration <= 0) return;
     addStudySession({
       subject: subject.trim(),
-      duration: parseInt(duration),
+      duration: parsedDuration,
       focusScore,
       date,
     });
@@ -84,6 +86,8 @@ export default function StudyTrackerComponent() {
                 <label className="text-[10px] font-mono font-black uppercase tracking-wider text-indigo-400 block mb-1">Duration (Mins)</label>
                 <input
                   type="number"
+                  min={1}
+                  max={720}
                   required
                   placeholder="e.g. 45"
                   value={duration}
@@ -142,7 +146,7 @@ export default function StudyTrackerComponent() {
       {/* Right panel: Session ledger list */}
       <div className="lg:col-span-8 flex flex-col h-full overflow-hidden">
         <div className={`${cardClass} flex-1 flex flex-col overflow-hidden`}>
-          <div className="pb-3 border-b border-indigo-50 dark:border-slate-850">
+          <div className="pb-3 border-b border-indigo-50 dark:border-slate-800">
             <h3 className="text-sm font-black uppercase tracking-wider">Session list history</h3>
           </div>
 
@@ -156,7 +160,7 @@ export default function StudyTrackerComponent() {
                 <div
                   key={session.id}
                   className={`p-3.5 rounded-2xl border flex items-center justify-between ${
-                    theme === 'dark' ? 'bg-slate-950/40 border-slate-850' : 'bg-indigo-50/30 border-indigo-100/50'
+                    theme === 'dark' ? 'bg-slate-950/40 border-slate-800' : 'bg-indigo-50/30 border-indigo-100/50'
                   }`}
                 >
                   <div className="flex items-center gap-3">

@@ -1,15 +1,18 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { 
-  Note, Notebook, Todo, DailyGoal, Habit, 
-  PomodoroSession, PlannerEvent, JournalEntry, 
-  MoodRecord, Expense, StudySession, UserProfile 
+import {
+  Note, Notebook, Todo, DailyGoal, Habit,
+  PomodoroSession, PlannerEvent, JournalEntry,
+  MoodRecord, Expense, StudySession, UserProfile
 } from '../types';
+import { formatLocalDate } from '../utils/date';
 
 interface ProductivityState {
   // Auth State
   user: UserProfile | null;
+  authToken: string | null;
   setUser: (user: UserProfile | null) => void;
+  setAuthToken: (token: string | null) => void;
 
   // App Settings
   theme: 'dark' | 'light';
@@ -18,7 +21,7 @@ interface ProductivityState {
   // Notes
   notes: Note[];
   notebooks: Notebook[];
-  addNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => string;
   updateNote: (id: string, updates: Partial<Note>) => void;
   deleteNote: (id: string) => void;
   addNotebook: (notebook: Omit<Notebook, 'id' | 'createdAt'>) => void;
@@ -82,7 +85,9 @@ export const useStore = create<ProductivityState>()(
   persist(
     (set, get) => ({
       user: null,
+      authToken: null,
       setUser: (user) => set({ user }),
+      setAuthToken: (authToken) => set({ authToken }),
 
       theme: 'light',
       toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
@@ -118,15 +123,17 @@ Try editing this note, creating new notebooks, or setting a daily goal!`,
         { id: 'work-notebook', name: 'Work', icon: '💼', createdAt: new Date().toISOString() },
         { id: 'personal-notebook', name: 'Personal', icon: '🌱', createdAt: new Date().toISOString() }
       ],
-      addNote: (note) => set((state) => {
+      addNote: (note) => {
+        const id = generateId();
         const newNote: Note = {
           ...note,
-          id: generateId(),
+          id,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        return { notes: [newNote, ...state.notes] };
-      }),
+        set((state) => ({ notes: [newNote, ...state.notes] }));
+        return id;
+      },
       updateNote: (id, updates) => set((state) => ({
         notes: state.notes.map((n) => 
           n.id === id 
@@ -174,9 +181,9 @@ Try editing this note, creating new notebooks, or setting a daily goal!`,
 
       // Daily Goals
       dailyGoals: [
-        { id: 'goal-1', title: 'Drink 3L of water', completed: true, date: new Date().toISOString().split('T')[0] },
-        { id: 'goal-2', title: 'Do 30 mins cardiovascular cardio workout', completed: false, date: new Date().toISOString().split('T')[0] },
-        { id: 'goal-3', title: 'Meditate before breakfast', completed: false, date: new Date().toISOString().split('T')[0] }
+        { id: 'goal-1', title: 'Drink 3L of water', completed: true, date: formatLocalDate() },
+        { id: 'goal-2', title: 'Do 30 mins cardiovascular workout', completed: false, date: formatLocalDate() },
+        { id: 'goal-3', title: 'Meditate before breakfast', completed: false, date: formatLocalDate() }
       ],
       addDailyGoal: (title, date) => set((state) => ({
         dailyGoals: [...state.dailyGoals, { id: generateId(), title, completed: false, date }]
@@ -225,8 +232,8 @@ Try editing this note, creating new notebooks, or setting a daily goal!`,
 
       // Calendar Events
       events: [
-        { id: 'ev-1', title: 'Productivity Review', description: 'Evaluate notebook organization & metrics', date: new Date().toISOString().split('T')[0], startTime: '11:00', endTime: '12:00', color: 'indigo', createdAt: new Date().toISOString() },
-        { id: 'ev-2', title: 'Team Sync-Up Session', description: 'Design alignment and review', date: new Date().toISOString().split('T')[0], startTime: '15:30', endTime: '16:30', color: 'pink', createdAt: new Date().toISOString() }
+        { id: 'ev-1', title: 'Productivity Review', description: 'Evaluate notebook organization & metrics', date: formatLocalDate(), startTime: '11:00', endTime: '12:00', color: 'indigo', createdAt: new Date().toISOString() },
+        { id: 'ev-2', title: 'Team Sync-Up Session', description: 'Design alignment and review', date: formatLocalDate(), startTime: '15:30', endTime: '16:30', color: 'pink', createdAt: new Date().toISOString() }
       ],
       addEvent: (event) => set((state) => ({
         events: [...state.events, { ...event, id: generateId(), createdAt: new Date().toISOString() }]
@@ -240,7 +247,7 @@ Try editing this note, creating new notebooks, or setting a daily goal!`,
 
       // Journals
       journals: [
-        { id: 'j-1', date: new Date().toISOString().split('T')[0], content: 'Today was highly productive. Managed to solve 3 core algorithms and build out the initial state layer. Feeling extremely positive.', mood: 'radiant', gratitude: ['Healthy breakfast', 'Fast coding flow', 'Good music tracks'], createdAt: new Date().toISOString() }
+        { id: 'j-1', date: formatLocalDate(), content: 'Today was highly productive. Managed to solve 3 core algorithms and build out the initial state layer. Feeling extremely positive.', mood: 'radiant', gratitude: ['Healthy breakfast', 'Fast coding flow', 'Good music tracks'], createdAt: new Date().toISOString() }
       ],
       addJournal: (journal) => set((state) => ({
         journals: [
@@ -257,11 +264,11 @@ Try editing this note, creating new notebooks, or setting a daily goal!`,
 
       // Mood Trackers
       moods: [
-        { id: 'm-1', date: new Date(Date.now() - 86400000).toISOString().split('T')[0], mood: 'happy', note: 'Met an old friend for lunch!', createdAt: new Date().toISOString() },
-        { id: 'm-2', date: new Date().toISOString().split('T')[0], mood: 'radiant', note: 'App building is looking gorgeous.', createdAt: new Date().toISOString() }
+        { id: 'm-1', date: formatLocalDate(new Date(Date.now() - 86400000)), mood: 'happy', note: 'Met an old friend for lunch!', createdAt: new Date().toISOString() },
+        { id: 'm-2', date: formatLocalDate(), mood: 'radiant', note: 'App building is looking gorgeous.', createdAt: new Date().toISOString() }
       ],
       addMood: (mood, note, date) => set((state) => {
-        const targetDate = date || new Date().toISOString().split('T')[0];
+        const targetDate = date || formatLocalDate();
         // Remove existing for today
         const filtered = state.moods.filter((m) => m.date !== targetDate);
         return {
@@ -274,9 +281,9 @@ Try editing this note, creating new notebooks, or setting a daily goal!`,
 
       // Finances
       expenses: [
-        { id: 'exp-1', amount: 80, category: 'Food & Dining', description: 'Groceries at Whole Foods', type: 'expense', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() },
-        { id: 'exp-2', amount: 3500, category: 'Salary', description: 'Tech Contracting Invoice', type: 'income', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() },
-        { id: 'exp-3', amount: 120, category: 'Utilities', description: 'Gigabit Fiber Internet Subscription', type: 'expense', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() }
+        { id: 'exp-1', amount: 80, category: 'Food & Dining', description: 'Groceries at Whole Foods', type: 'expense', date: formatLocalDate(), createdAt: new Date().toISOString() },
+        { id: 'exp-2', amount: 3500, category: 'Salary', description: 'Tech Contracting Invoice', type: 'income', date: formatLocalDate(), createdAt: new Date().toISOString() },
+        { id: 'exp-3', amount: 120, category: 'Utilities', description: 'Gigabit Fiber Internet Subscription', type: 'expense', date: formatLocalDate(), createdAt: new Date().toISOString() }
       ],
       addExpense: (expense) => set((state) => ({
         expenses: [...state.expenses, { ...expense, id: generateId(), createdAt: new Date().toISOString() }]
@@ -287,8 +294,8 @@ Try editing this note, creating new notebooks, or setting a daily goal!`,
 
       // Study Tracker
       studySessions: [
-        { id: 's-1', subject: 'Python Algorithms', duration: 50, focusScore: 5, date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() },
-        { id: 's-2', subject: 'React Component Design', duration: 25, focusScore: 4, date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() }
+        { id: 's-1', subject: 'Python Algorithms', duration: 50, focusScore: 9, date: formatLocalDate(), createdAt: new Date().toISOString() },
+        { id: 's-2', subject: 'React Component Design', duration: 25, focusScore: 8, date: formatLocalDate(), createdAt: new Date().toISOString() }
       ],
       addStudySession: (session) => set((state) => ({
         studySessions: [...state.studySessions, { ...session, id: generateId(), createdAt: new Date().toISOString() }]

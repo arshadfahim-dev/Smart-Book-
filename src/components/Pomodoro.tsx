@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Pause, RotateCcw, Clock, Award, CheckCircle, Flame, Star, Brain } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { formatLocalDate } from '../utils/date';
 
 export default function PomodoroComponent() {
   const theme = useStore((state) => state.theme);
@@ -14,28 +15,53 @@ export default function PomodoroComponent() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [subject, setSubject] = useState('React Coding');
-  const [focusScore, setFocusScore] = useState(5);
+  const [focusScore, setFocusScore] = useState(8);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const initialTime = {
     work: 25 * 60,
     short_break: 5 * 60,
     long_break: 15 * 60,
   }[mode];
 
+  const handleTimerComplete = () => {
+    logPomodoro({
+      duration: Math.round(initialTime / 60),
+      type: mode,
+    });
+
+    if (mode === 'work') {
+      addStudySession({
+        subject: subject.trim() || 'Focus session',
+        duration: Math.round(initialTime / 60),
+        focusScore,
+        date: formatLocalDate(),
+      });
+    }
+
+    if (mode === 'work') {
+      setMode('short_break');
+    } else {
+      setMode('work');
+    }
+  };
+
+  const onCompleteRef = useRef(handleTimerComplete);
+  onCompleteRef.current = handleTimerComplete;
+
   useEffect(() => {
     setTimeLeft(initialTime);
     setIsRunning(false);
-  }, [mode]);
+  }, [mode, initialTime]);
 
   useEffect(() => {
     if (isRunning) {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
-            clearInterval(timerRef.current!);
+            if (timerRef.current) clearInterval(timerRef.current);
             setIsRunning(false);
-            handleTimerComplete();
+            onCompleteRef.current();
             return 0;
           }
           return prev - 1;
@@ -49,29 +75,6 @@ export default function PomodoroComponent() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isRunning, mode]);
-
-  const handleTimerComplete = () => {
-    logPomodoro({
-      duration: Math.round(initialTime / 60),
-      type: mode,
-    });
-
-    if (mode === 'work') {
-      addStudySession({
-        subject: subject.trim() || 'Focus session',
-        duration: Math.round(initialTime / 60),
-        focusScore: focusScore,
-        date: new Date().toISOString().split('T')[0],
-      });
-    }
-
-    // Toggle automatically
-    if (mode === 'work') {
-      setMode('short_break');
-    } else {
-      setMode('work');
-    }
-  };
 
   const toggleTimer = () => {
     setIsRunning(!isRunning);
@@ -159,21 +162,37 @@ export default function PomodoroComponent() {
             </div>
           </div>
 
-          {/* Session Subject Selector */}
+          {/* Session Subject & Focus Score Selector */}
           {mode === 'work' && (
-            <div className="w-full text-left space-y-1 z-10">
-              <label className="text-[10px] font-mono font-black uppercase tracking-wider text-indigo-400 block mb-1">Session Target</label>
-              <input
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="React Component Design, Algorithms..."
-                className={`w-full px-3 py-2.5 text-xs rounded-xl focus:outline-none border ${
-                  theme === 'dark' 
-                    ? 'bg-slate-950 border-slate-800 text-white placeholder:text-slate-600 focus:border-indigo-500' 
-                    : 'bg-indigo-50/50 border-indigo-100 text-indigo-950 placeholder:text-indigo-300 focus:border-indigo-400'
-                }`}
-              />
+            <div className="w-full text-left space-y-2.5 z-10">
+              <div>
+                <label className="text-[10px] font-mono font-black uppercase tracking-wider text-indigo-400 block mb-1">Session Target</label>
+                <input
+                  type="text"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="React Component Design, Algorithms..."
+                  className={`w-full px-3 py-2.5 text-xs rounded-xl focus:outline-none border ${
+                    theme === 'dark' 
+                      ? 'bg-slate-950 border-slate-800 text-white placeholder:text-slate-600 focus:border-indigo-500' 
+                      : 'bg-indigo-50/50 border-indigo-100 text-indigo-950 placeholder:text-indigo-300 focus:border-indigo-400'
+                  }`}
+                />
+              </div>
+              <div>
+                <div className="flex justify-between items-center text-[10px] font-mono font-black uppercase tracking-wider text-indigo-400 mb-1">
+                  <span>Target Focus</span>
+                  <span className="text-indigo-500">{focusScore} / 10</span>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={10}
+                  value={focusScore}
+                  onChange={(e) => setFocusScore(parseInt(e.target.value, 10))}
+                  className="w-full accent-indigo-600 h-1 rounded-lg cursor-pointer"
+                />
+              </div>
             </div>
           )}
 
@@ -201,7 +220,7 @@ export default function PomodoroComponent() {
       {/* Right panel: History Logs */}
       <div className="lg:col-span-5 flex flex-col h-full overflow-hidden">
         <div className={`${cardClass} flex-1 flex flex-col overflow-hidden`}>
-          <div className="pb-3 border-b border-indigo-50 dark:border-slate-850 flex items-center gap-2">
+          <div className="pb-3 border-b border-indigo-50 dark:border-slate-800 flex items-center gap-2">
             <Clock className="h-4 w-4 text-pink-500" />
             <h3 className="text-sm font-black uppercase tracking-wider">Completed Focus Sessions</h3>
           </div>
@@ -216,7 +235,7 @@ export default function PomodoroComponent() {
                 <div 
                   key={session.id} 
                   className={`p-3 rounded-2xl border flex items-center justify-between ${
-                    theme === 'dark' ? 'bg-slate-950/40 border-slate-850' : 'bg-indigo-50/30 border-indigo-100/50'
+                    theme === 'dark' ? 'bg-slate-950/40 border-slate-800' : 'bg-indigo-50/30 border-indigo-100/50'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">

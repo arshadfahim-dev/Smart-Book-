@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, Plus, Trash2, Clock, Check, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { PlannerEvent } from '../types';
+import { formatLocalDate } from '../utils/date';
 
 export default function PlannerComponent() {
   const theme = useStore((state) => state.theme);
@@ -10,7 +10,7 @@ export default function PlannerComponent() {
   const addEvent = useStore((state) => state.addEvent);
   const deleteEvent = useStore((state) => state.deleteEvent);
 
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(formatLocalDate());
   
   // New event fields
   const [title, setTitle] = useState('');
@@ -60,7 +60,7 @@ export default function PlannerComponent() {
 
   const daysArray = Array.from({ length: daysInMonth }).map((_, i) => {
     const date = new Date(year, month, i + 1);
-    return date.toISOString().split('T')[0];
+    return formatLocalDate(date);
   });
 
   const blanks = Array.from({ length: firstDayIndex }).map((_, idx) => null);
@@ -80,7 +80,7 @@ export default function PlannerComponent() {
         <div className={`${cardClass} flex-1 flex flex-col justify-between overflow-hidden`}>
           <div>
             {/* Header navigator */}
-            <div className="flex items-center justify-between pb-3 border-b border-indigo-50 dark:border-slate-850">
+            <div className="flex items-center justify-between pb-3 border-b border-indigo-50 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4.5 w-4.5 text-indigo-500" />
                 <span className="text-sm font-black uppercase tracking-wider">
@@ -90,13 +90,13 @@ export default function PlannerComponent() {
               <div className="flex items-center gap-1">
                 <button 
                   onClick={handlePrevMonth}
-                  className="p-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-850"
+                  className="p-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={handleNextMonth}
-                  className="p-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-850"
+                  className="p-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -163,7 +163,7 @@ export default function PlannerComponent() {
             </div>
           </div>
 
-          <div className="text-[10px] font-mono text-indigo-400 pt-4 border-t border-indigo-50 dark:border-slate-850">
+          <div className="text-[10px] font-mono text-indigo-400 pt-4 border-t border-indigo-50 dark:border-slate-800">
             Click any day to schedule color-coded milestones or reviews.
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function PlannerComponent() {
       {/* Right panel: Events list & add form */}
       <div className="lg:col-span-5 flex flex-col h-full overflow-hidden">
         <div className={`${cardClass} flex-1 flex flex-col overflow-hidden`}>
-          <div className="pb-3 border-b border-indigo-50 dark:border-slate-850 flex items-center justify-between">
+          <div className="pb-3 border-b border-indigo-50 dark:border-slate-800 flex items-center justify-between">
             <div>
               <h3 className="text-xs font-black uppercase tracking-wider text-indigo-400">Selected Day Events</h3>
               <span className="text-[10px] font-mono font-bold text-indigo-500">{selectedDate}</span>

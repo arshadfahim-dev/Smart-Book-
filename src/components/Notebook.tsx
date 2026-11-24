@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   FolderPlus, Plus, Search, Pin, Trash2, Edit, FileText, 
-  Check, Hash, Columns, BookOpen, AlertCircle
+  Check, Hash, Columns, BookOpen
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import Markdown from 'react-markdown';
@@ -18,7 +18,7 @@ export default function NotebookComponent() {
   const deleteNotebook = useStore((state) => state.deleteNotebook);
 
   const [activeNotebookId, setActiveNotebookId] = useState<string>('all');
-  const [activeNoteId, setActiveNoteId] = useState<string>('');
+  const [activeNoteId, setActiveNoteId] = useState<string>(() => notes[0]?.id || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [editorMode, setEditorMode] = useState<'edit' | 'preview' | 'split'>('split');
 
@@ -27,6 +27,7 @@ export default function NotebookComponent() {
   const [newNotebookIcon, setNewNotebookIcon] = useState('📓');
   const [isAddingNotebook, setIsAddingNotebook] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Active note state mirroring for immediate UI responsiveness & auto-save
   const [editTitle, setEditTitle] = useState('');
@@ -37,7 +38,9 @@ export default function NotebookComponent() {
 
   useEffect(() => {
     if (activeNote) {
-      setActiveNoteId(activeNote.id);
+      if (activeNote.id !== activeNoteId) {
+        setActiveNoteId(activeNote.id);
+      }
       setEditTitle(activeNote.title);
       setEditContent(activeNote.content);
       setEditTagsString(activeNote.tags.join(', '));
@@ -47,41 +50,56 @@ export default function NotebookComponent() {
       setEditContent('');
       setEditTagsString('');
     }
-  }, [activeNoteId, notes.length]);
+  }, [activeNote?.id]);
 
-  // Auto save trigger
   useEffect(() => {
-    if (!activeNoteId) return;
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  // Auto save trigger only when local draft actually diverges from stored note
+  useEffect(() => {
+    if (!activeNote) return;
+    const parsedTags = editTagsString
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+    const hasChanges =
+      editTitle !== activeNote.title ||
+      editContent !== activeNote.content ||
+      parsedTags.join(',') !== activeNote.tags.join(',');
+
+    if (!hasChanges) return;
+
     const delay = setTimeout(() => {
-      const parsedTags = editTagsString
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0);
-      updateNote(activeNoteId, {
+      updateNote(activeNote.id, {
         title: editTitle,
         content: editContent,
         tags: parsedTags
       });
-      showToast('Notebook auto-saved instantly');
-    }, 1200);
+      showToast('Notebook auto-saved');
+    }, 900);
 
     return () => clearTimeout(delay);
-  }, [editTitle, editContent, editTagsString, activeNoteId]);
+  }, [editTitle, editContent, editTagsString, activeNote]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 2500);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToastMessage(''), 2500);
   };
 
   const handleCreateNote = () => {
     const notebookId = activeNotebookId === 'all' ? undefined : activeNotebookId;
-    addNote({
+    const createdId = addNote({
       title: 'New Workspace Draft',
       content: 'Write something spectacular...',
       tags: ['Draft'],
       isPinned: false,
       notebookId
     });
+    setActiveNoteId(createdId);
     showToast('New note created successfully');
   };
 
@@ -98,8 +116,8 @@ export default function NotebookComponent() {
   };
 
   const handleDeleteActiveNote = () => {
-    if (!activeNoteId) return;
-    deleteNote(activeNoteId);
+    if (!activeNote) return;
+    deleteNote(activeNote.id);
     setActiveNoteId('');
     showToast('Draft removed successfully');
   };
@@ -350,7 +368,7 @@ export default function NotebookComponent() {
             </div>
 
             {/* Title & Tags Input */}
-            <div className="py-4 space-y-2 border-b border-indigo-50 dark:border-slate-850">
+            <div className="py-4 space-y-2 border-b border-indigo-50 dark:border-slate-800">
               <input
                 type="text"
                 placeholder="Enter note title..."

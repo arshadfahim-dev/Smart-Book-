@@ -20,9 +20,9 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      if (e.key === 'Escape' && isOpen) {
         e.preventDefault();
-        if (isOpen) onClose();
+        onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -123,7 +123,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                         onNavigate(cmd.view);
                         onClose();
                       }}
-                      className={`w-full flex items-center justify-between text-left p-2.5 rounded-xl text-xs font-semibold transition-all ${
+                      className={`group w-full flex items-center justify-between text-left p-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                         theme === 'dark' ? 'hover:bg-slate-800/60' : 'hover:bg-indigo-50/50'
                       }`}
                     >

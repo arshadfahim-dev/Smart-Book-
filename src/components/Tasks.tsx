@@ -40,22 +40,29 @@ export default function TasksComponent() {
     setTodoDueDate('');
   };
 
+  const swapFilteredItems = (indexA: number, indexB: number) => {
+    const itemA = filteredTodos[indexA];
+    const itemB = filteredTodos[indexB];
+    if (!itemA || !itemB) return;
+
+    const fullIndexA = todos.findIndex((t) => t.id === itemA.id);
+    const fullIndexB = todos.findIndex((t) => t.id === itemB.id);
+    if (fullIndexA === -1 || fullIndexB === -1) return;
+
+    const updated = [...todos];
+    updated[fullIndexA] = todos[fullIndexB];
+    updated[fullIndexB] = todos[fullIndexA];
+    reorderTodos(updated.map((t, pos) => ({ ...t, position: pos })));
+  };
+
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
-    const newTodos = [...filteredTodos];
-    const temp = newTodos[index];
-    newTodos[index] = newTodos[index - 1];
-    newTodos[index - 1] = temp;
-    reorderTodos(newTodos);
+    swapFilteredItems(index, index - 1);
   };
 
   const handleMoveDown = (index: number) => {
     if (index === filteredTodos.length - 1) return;
-    const newTodos = [...filteredTodos];
-    const temp = newTodos[index];
-    newTodos[index] = newTodos[index + 1];
-    newTodos[index + 1] = temp;
-    reorderTodos(newTodos);
+    swapFilteredItems(index, index + 1);
   };
 
   // Filtering
@@ -253,7 +260,7 @@ export default function TasksComponent() {
                     className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
                       todo.completed 
                         ? 'opacity-65 bg-indigo-50/20 border-indigo-100/50 dark:bg-slate-950/20' 
-                        : theme === 'dark' ? 'bg-slate-950/40 border-slate-850' : 'bg-indigo-50/30 border-indigo-100/50'
+                        : theme === 'dark' ? 'bg-slate-950/40 border-slate-800' : 'bg-indigo-50/30 border-indigo-100/50'
                     }`}
                   >
                     {/* Title check trigger */}

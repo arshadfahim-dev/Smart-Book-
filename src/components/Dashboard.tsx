@@ -4,6 +4,7 @@ import {
   BookOpen, Clock, Calendar, Award, Sparkles, Flame, Brain, Plus, CheckSquare, Zap, ArrowRight, ShieldCheck
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { formatLocalDate } from '../utils/date';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 export default function Dashboard({ onNavigate }: { onNavigate: (view: string) => void }) {
@@ -22,7 +23,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (view: string) =
   const [newGoalText, setNewGoalText] = useState('');
 
   // Calculations
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalDate();
   const activeGoals = dailyGoals.filter((g) => g.date === todayStr);
 
   // Study Tracker Hours calculation

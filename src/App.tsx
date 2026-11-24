@@ -17,6 +17,7 @@ import {
   X, Smartphone, Sun, Moon 
 } from 'lucide-react';
 import { useStore } from './store/useStore';
+import { diffCalendarDays, formatLocalDate, parseLocalDate } from './utils/date';
 
 export default function App() {
   const theme = useStore((state) => state.theme);
@@ -30,7 +31,7 @@ export default function App() {
   // Command Palette keyboard shortcut
   useEffect(() => {
     const handleKeyBind = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setIsCommandPaletteOpen((prev) => !prev);
       }
@@ -39,25 +40,28 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyBind);
   }, []);
 
-  // Streak tracking in local storage
+  // Streak tracking in local storage (DST-safe local calendar day calculation)
   useEffect(() => {
     const storedStreak = localStorage.getItem('zenith_streak');
     const lastActive = localStorage.getItem('zenith_last_active');
-    const todayStr = new Date().toDateString();
+    const todayStr = formatLocalDate();
 
     if (storedStreak) {
       const currentStreakVal = parseInt(storedStreak, 10) || 1;
       if (lastActive) {
-        const lastActiveDate = new Date(lastActive);
-        const todayDate = new Date(todayStr);
-        const diffTime = Math.abs(todayDate.getTime() - lastActiveDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const lastActiveDate = /^\d{4}-\d{2}-\d{2}$/.test(lastActive)
+          ? parseLocalDate(lastActive)
+          : new Date(lastActive);
+        const todayDate = parseLocalDate(todayStr);
+        const diffDays = Number.isNaN(lastActiveDate.getTime())
+          ? 0
+          : diffCalendarDays(lastActiveDate, todayDate);
 
         if (diffDays === 1) {
           const nextStreak = currentStreakVal + 1;
           setStreak(nextStreak);
           localStorage.setItem('zenith_streak', nextStreak.toString());
-        } else if (diffDays > 1) {
+        } else if (diffDays > 1 || diffDays < 0) {
           setStreak(1);
           localStorage.setItem('zenith_streak', '1');
         } else {
@@ -71,7 +75,7 @@ export default function App() {
       setStreak(1);
       localStorage.setItem('zenith_streak', '1');
     }
-    
+
     localStorage.setItem('zenith_last_active', todayStr);
   }, []);
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Flame, Plus, Trash2, Check, Sparkles, Calendar, Zap } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { formatLocalDate } from '../utils/date';
 
 export default function HabitsComponent() {
   const theme = useStore((state) => state.theme);
@@ -20,12 +21,12 @@ export default function HabitsComponent() {
     setNewHabitName('');
   };
 
-  // Generate the last 7 dates for logging grids
+  // Generate the last 7 local dates for logging grids
   const last7Days = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - i);
     return {
-      dateStr: d.toISOString().split('T')[0],
+      dateStr: formatLocalDate(d),
       dayName: d.toLocaleDateString('en-US', { weekday: 'narrow' }),
       dateNum: d.getDate(),
     };
@@ -104,7 +105,7 @@ export default function HabitsComponent() {
       {/* Right panel: Grid logs */}
       <div className="lg:col-span-8 flex flex-col h-full overflow-hidden">
         <div className={`${cardClass} flex-1 flex flex-col overflow-hidden`}>
-          <div className="pb-4 border-b border-indigo-50 dark:border-slate-850 flex justify-between items-center">
+          <div className="pb-4 border-b border-indigo-50 dark:border-slate-800 flex justify-between items-center">
             <h3 className="text-sm font-black uppercase tracking-wider">Active Habit Streaks</h3>
             <span className="text-[10px] font-mono font-bold text-indigo-400">LAST 7 DAYS</span>
           </div>
@@ -119,7 +120,7 @@ export default function HabitsComponent() {
                 <div 
                   key={habit.id} 
                   className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                    theme === 'dark' ? 'bg-slate-950/40 border-slate-850' : 'bg-indigo-50/30 border-indigo-100/50'
+                    theme === 'dark' ? 'bg-slate-950/40 border-slate-800' : 'bg-indigo-50/30 border-indigo-100/50'
                   }`}
                 >
                   <div className="space-y-1">
