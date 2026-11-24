@@ -1,6 +1,18 @@
 # Smart Book
 
-**Smart Book** is a full-stack, mobile-ready productivity workspace built with React 19, TypeScript, Tailwind CSS v4, Zustand, and Node.js Express. It unifies note-taking, task management, habit streak tracking, Pomodoro focus sessions, calendar planning, and study analytics into one fast, responsive interface.
+**Smart Book** is a full-stack, mobile-ready productivity workspace that unifies note-taking, task management, habit streak tracking, Pomodoro focus sessions, calendar planning, and study analytics into one fast, responsive interface.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| **Language** | TypeScript 5.8 (`tsconfig.json`), JavaScript (Node.js 22) |
+| **Frontend Framework** | React 19, Vite 6, Tailwind CSS v4, Zustand 5, Recharts 3 |
+| **Backend Framework** | Express 4 (`server.ts`) |
+| **Database** | PostgreSQL 16 (`database/schema.sql`, `database/seed.sql`) |
+| **Mobile Wrapper** | Capacitor 7 Android Shell (`mobile/`) |
 
 ---
 
