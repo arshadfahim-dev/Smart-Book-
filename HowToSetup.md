@@ -91,6 +91,22 @@ Smart Book ships with idempotent PostgreSQL DDL and sample seed files:
 
 ---
 
+## Mobile App Setup (Android via Capacitor)
+
+The `mobile/` directory contains a Capacitor Android wrapper with its own pinned `mobile/package-lock.json` that packages the built `dist/` web bundle for Android:
+
+```bash
+npm ci
+npm run build
+cd mobile
+npm ci
+npx cap add android
+npx cap sync android
+npx cap open android
+```
+
+---
+
 ## First Admin Login
 
 1. Set both `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` in `.env` before starting the server.
